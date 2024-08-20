@@ -1,0 +1,200 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{Robot Filtering Techniques: A Detailed Overview}
+\author{Geoffrey Wang}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+Filtering techniques are essential in robotics for estimating the state of a robot in an environment, especially when dealing with noisy and uncertain sensor data. This document provides a detailed overview of several key filtering methods, including Bayesian filtering, Kalman filtering, Extended Kalman filtering, and Particle filtering.
+
+\section{Bayesian Filtering}
+
+\subsection{Basic Principles}
+Bayesian filtering is a recursive estimation process that updates the posterior probability distribution of the state by combining prior information with current observation data. The core idea is based on Bayes' theorem:
+
+\begin{equation}
+p(x_t | z_{1:t}) = \frac{p(z_t | x_t) \cdot p(x_t | z_{1:t-1})}{p(z_t | z_{1:t-1})}
+\end{equation}
+
+Where:
+\begin{itemize}
+    \item \( p(x_t | z_{1:t}) \) is the posterior distribution of the state \( x_t \) given all observations \( z_{1:t} \).
+    \item \( p(z_t | x_t) \) is the observation model, representing the likelihood of observing \( z_t \) given the state \( x_t \).
+    \item \( p(x_t | z_{1:t-1}) \) is the prior distribution of the state, predicted from the previous state.
+    \item \( p(z_t | z_{1:t-1}) \) is the normalization factor ensuring the posterior is a valid probability distribution.
+\end{itemize}
+
+\subsection{Steps}
+Bayesian filtering involves two main steps:
+\begin{itemize}
+    \item \textbf{Prediction:} Predict the prior distribution of the state based on the previous state and control inputs:
+    \begin{equation}
+    p(x_t | z_{1:t-1}) = \int p(x_t | x_{t-1}, u_{t-1}) \cdot p(x_{t-1} | z_{1:t-1}) dx_{t-1}
+    \end{equation}
+    
+    \item \textbf{Update:} Update the state distribution using the current observation:
+    \begin{equation}
+    p(x_t | z_{1:t}) = \frac{p(z_t | x_t) \cdot p(x_t | z_{1:t-1})}{p(z_t | z_{1:t-1})}
+    \end{equation}
+\end{itemize}
+
+\subsection{Advantages and Disadvantages}
+\begin{itemize}
+    \item \textbf{Advantages:} Highly general, applicable to various state spaces and noise distributions.
+    \item \textbf{Disadvantages:} Computationally intensive, especially in continuous state spaces.
+\end{itemize}
+
+\section{Kalman Filtering}
+
+\subsection{Basic Principles}
+Kalman filtering is a special case of Bayesian filtering, designed for linear Gaussian systems. It recursively estimates the state of a system and is optimal under the given assumptions.
+
+\subsection{State Space Model}
+The state transition and observation models are assumed to be linear:
+
+\begin{equation}
+x_t = A x_{t-1} + B u_{t-1} + w_{t-1}
+\end{equation}
+
+\begin{equation}
+z_t = H x_t + v_t
+\end{equation}
+
+Where:
+\begin{itemize}
+    \item \( x_t \) is the state vector.
+    \item \( A \) is the state transition matrix.
+    \item \( B \) is the control input matrix.
+    \item \( u_{t-1} \) is the control input.
+    \item \( w_{t-1} \) is the process noise, assumed to be \( \mathcal{N}(0, Q) \).
+    \item \( z_t \) is the observation vector.
+    \item \( H \) is the observation matrix.
+    \item \( v_t \) is the observation noise, assumed to be \( \mathcal{N}(0, R) \).
+\end{itemize}
+
+\subsection{Steps}
+Kalman filtering involves two main steps:
+\begin{itemize}
+    \item \textbf{Prediction:} 
+    \begin{equation}
+    \hat{x}_{t|t-1} = A \hat{x}_{t-1|t-1} + B u_{t-1}
+    \end{equation}
+    \begin{equation}
+    P_{t|t-1} = A P_{t-1|t-1} A^T + Q
+    \end{equation}
+    
+    \item \textbf{Update:} 
+    \begin{equation}
+    K_t = P_{t|t-1} H^T (H P_{t|t-1} H^T + R)^{-1}
+    \end{equation}
+    \begin{equation}
+    \hat{x}_{t|t} = \hat{x}_{t|t-1} + K_t (z_t - H \hat{x}_{t|t-1})
+    \end{equation}
+    \begin{equation}
+    P_{t|t} = (I - K_t H) P_{t|t-1}
+    \end{equation}
+\end{itemize}
+
+\subsection{Advantages and Disadvantages}
+\begin{itemize}
+    \item \textbf{Advantages:} Computationally efficient, optimal for linear Gaussian systems.
+    \item \textbf{Disadvantages:} Limited to linear systems with Gaussian noise.
+\end{itemize}
+
+\section{Extended Kalman Filtering}
+
+\subsection{Basic Principles}
+Extended Kalman filtering (EKF) extends the Kalman filter to handle nonlinear systems by linearizing the state transition and observation models around the current estimate.
+
+\subsection{State Space Model}
+The state transition and observation models are nonlinear:
+
+\begin{equation}
+x_t = f(x_{t-1}, u_{t-1}) + w_{t-1}
+\end{equation}
+
+\begin{equation}
+z_t = h(x_t) + v_t
+\end{equation}
+
+Where \( f(\cdot) \) and \( h(\cdot) \) are nonlinear functions.
+
+\subsection{Steps}
+EKF involves linearizing the models and then applying the Kalman filter:
+\begin{itemize}
+    \item \textbf{Linearization:} 
+    \begin{equation}
+    A_t = \frac{\partial f(x_{t-1}, u_{t-1})}{\partial x_{t-1}}
+    \end{equation}
+    \begin{equation}
+    H_t = \frac{\partial h(x_t)}{\partial x_t}
+    \end{equation}
+    
+    \item \textbf{Prediction:} 
+    \begin{equation}
+    \hat{x}_{t|t-1} = f(\hat{x}_{t-1|t-1}, u_{t-1})
+    \end{equation}
+    \begin{equation}
+    P_{t|t-1} = A_t P_{t-1|t-1} A_t^T + Q
+    \end{equation}
+    
+    \item \textbf{Update:} 
+    \begin{equation}
+    K_t = P_{t|t-1} H_t^T (H_t P_{t|t-1} H_t^T + R)^{-1}
+    \end{equation}
+    \begin{equation}
+    \hat{x}_{t|t} = \hat{x}_{t|t-1} + K_t (z_t - h(\hat{x}_{t|t-1}))
+    \end{equation}
+    \begin{equation}
+    P_{t|t} = (I - K_t H_t) P_{t|t-1}
+    \end{equation}
+\end{itemize}
+
+\subsection{Advantages and Disadvantages}
+\begin{itemize}
+    \item \textbf{Advantages:} Applicable to weakly nonlinear systems.
+    \item \textbf{Disadvantages:} Linearization can introduce errors, especially in highly nonlinear systems.
+\end{itemize}
+
+\section{Particle Filtering}
+
+\subsection{Basic Principles}
+Particle filtering is a non-parametric approach to Bayesian filtering, suitable for nonlinear and non-Gaussian systems. It represents the posterior distribution with a set of weighted samples (particles).
+
+\subsection{Steps}
+Particle filtering involves the following steps:
+\begin{itemize}
+    \item \textbf{Initialization:} Generate a set of particles representing possible states.
+    
+    \item \textbf{Prediction:} For each particle, predict the next state:
+\begin{equation}
+x_t^{(i)} \sim p(x_t | x_{t-1}^{(i)}, u_{t-1})
+\end{equation}
+\item \textbf{Update:} Update the weight of each particle based on the likelihood of the observation:
+\begin{equation}
+w_t^{(i)} \propto p(z_t | x_t^{(i)})
+\end{equation}
+
+\item \textbf{Resampling:} Resample particles based on their weights to focus on more likely states.
+\end{itemize}
+
+\subsection{Advantages and Disadvantages}
+\begin{itemize}
+\item \textbf{Advantages:} Handles nonlinear and non-Gaussian systems, suitable for complex, multi-modal distributions.
+\item \textbf{Disadvantages:} Computationally expensive, especially in high-dimensional state spaces.
+\end{itemize}
+
+\section{Conclusion}
+Each filtering technique has its strengths and weaknesses, making them suitable for different applications. The choice of filter depends on the system’s linearity, the noise characteristics, and the computational resources available.
+
+\end{document}
